@@ -1,15 +1,27 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import ReactDataGrid from 'react-data-grid';
-import { Grid, Button, SwipeableDrawer } from '@material-ui/core';
+import { 
+    Grid, 
+    Button, 
+    SwipeableDrawer, 
+    AppBar, 
+    Toolbar,
+    TextField,
+    Tooltip,
+    IconButton
+} from '@material-ui/core';
 import { withStyles } from '@material-ui/styles';
-import { Edit, Delete, Save, Cancel } from '@material-ui/icons';
+import { Edit, Delete, Save, Cancel, Search, Refresh } from '@material-ui/icons';
 import { withFormik } from 'formik';
+import _ from 'lodash';
 
-import UpdateModal from './Modals/UpdateModal';
 import EmptyRowsView from './EmptyRowsView';
 import API from '../API';
 import ConfirmDialog from './Dialogs/ConfirmDialog';
 import * as Yup from 'yup';
+import FormGenerator from './Form/FormGenerator';
+import DynamicSnackbar from './Snackbar/DynamicSnackbar';
+
 
 
 const defaultColumnConfig = {
@@ -34,12 +46,17 @@ const cols = [
     {key: "leader", name: "Leader's SSN", type: String},
 ].map(col => ({...col, ...defaultColumnConfig}));
 
-const validations = {
-    ssn: Yup.string()
-            .required('Social secure number is required')
-            .length(9, 'SSN must have 9 numbers')
-            .matches('/[0-9]{9}/', 'Invalid SSN')
-};
+const validationSchema = Yup.object().shape({
+    ssn: Yup.string().required('Social secure number is required').length(9, 'SSN must have 9 digits').matches(/[0-9]{9}/, 'Invalid SSN'),
+    last_name: Yup.string().required('Lastname is required'),
+    first_name: Yup.string().required('Firstname is required'),
+    bank_no: Yup.string().required('Bank number is required').length(16, 'Bank number must have 16 digits').matches(/[0-9]{16}/, 'Invalid BankNO'),
+    address: Yup.string().required('Address is required'),
+    salary: Yup.number().min(250, 'Salary must more than 250'),
+    driver_license: Yup.string().matches(/(''|[0-9]{12})/, 'Invalid driver license').nullable(),
+    username: Yup.string().min(6).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable(),
+    leader: Yup.string().length(9, 'SSN must have 9 digits').matches(/[0-9]{9}/, 'Invalid SSN').nullable()
+});
 
 // const rows = [
 //     {
@@ -92,18 +109,38 @@ const styles = theme => ({
         '&:hover,&:focus': {
             backgroundColor: '#14b86e',
         }
-    }
+    },
+    searchBar: {
+        borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+    },
+        searchInput: {
+        fontSize: theme.typography.fontSize,
+    },
+    block: {
+        display: 'block',
+    },
+    addUser: {
+        marginRight: theme.spacing(1),
+    },
+    contentWrapper: {
+        margin: '40px 16px 16px',
+    },
 });
 
 
 
 function Employee(props) {
-    const [employees, setEmployees] = React.useState([]);
-    const [selected, setSelected] = React.useState({});
-    const [openDrawer, setOpenDrawer] = React.useState(false);
+    const [employees, setEmployees]       = React.useState([]);
+    const [values, setValues]             = React.useState({});
+    const [updateDrawer, setUpdateDrawer] = React.useState(false);
+    const [insertDrawer, setInsertDrawer] = React.useState(false);
+    const [deleteDialog, setDeleteDialog] = React.useState(false);
     const [updateDialog, setUpdateDialog] = React.useState(false);
+    const [insertDialog, setInsertDialog] = React.useState(false);
     const [cancelDialog, setCancelDialog] = React.useState(false);
-    const [formChanged, setFormChanged] = React.useState(false);
+    const [formChanged, setFormChanged]   = React.useState(false);
+    const [formValid, setFormValid]       = React.useState(false);
+    const [openSnackbar, setOpenSnackbar] = React.useState({open: false, variant: 'success', message: 'Hello, world'});
 
     const fetchEmployee = async () => {
         try {
@@ -111,7 +148,7 @@ function Employee(props) {
             setEmployees(response.data[0]);
         }
         catch (e) {
-            console.error(e);
+            
         }
     }
 
@@ -119,20 +156,53 @@ function Employee(props) {
         // data: JSON()
         try {
             const response = await API.post(`employee`, data);
-            console.log(response.data);
+            return response.data;
         }
         catch (e) {
-            console.error(e);
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
         }
     }
+
+    const handleUpdateSubmit = values => {
+        const message = updateEmployee(values);
+        console.log(message)
+    }
+
+
+    const handleDeleteSubmit = async (event) => {
+        try {
+            console.log(values.ssn, 'will be deleted')
+            const response = await API.delete(`employee/${values.ssn}`);
+            setOpenSnackbar({open: true, variant: 'success', message: 'Success delete employee'})
+            setDeleteDialog(false);
+            await fetchEmployee();
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+            setDeleteDialog(false);
+        }
+        
+    }
+
+    const handleInsertSubmit = async (event) => {
+        try {
+            console.log(values.ssn, 'will added')
+            const response = await API.post(`employee/`, values);
+            setOpenSnackbar({open: true, variant: 'success', message: 'Success add employee'})
+            setDeleteDialog(false);
+            await fetchEmployee();
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+            setDeleteDialog(false);
+        }
+        
+    }
+
 
     useEffect(() => {
         console.log(employees);
     }, [employees]);
-
-    useEffect(() => {
-        console.log(selected);
-    }, [selected]);
 
     useEffect(() => {
         console.log('FormChanged: ', formChanged);
@@ -147,108 +217,235 @@ function Employee(props) {
         };
     }, []);
 
-    const FormikForm = withFormik({
+    const FormikUpdate = withFormik({
+        validateOnMount: true,
         mapPropsToValues() {
-            return selected;
+            return values;
         },
-        // validationSchema: Yup.object().shape(validations),
-        handleSubmit: values => console.log(values)
-    })(UpdateModal);
+        validationSchema: validationSchema,
+        handleSubmit: (values, { setSubmitting }) => {
+            // handleInsertSubmit(values);
+            setSubmitting(false);
+        },
+    })(FormGenerator);
+
+    const FormikInsert = withFormik({
+        validateOnMount: false,
+        mapPropsToValues() {
+            return values;
+        },
+        validationSchema: validationSchema,
+        handleSubmit: (values, { setSubmitting }) => {
+            handleInsertSubmit(values);
+            setSubmitting(false);
+            setInsertDialog(false);
+            setFormChanged(false);
+        },
+    })(FormGenerator);
 
     
     
     const { classes } = props;
 
     return (
-        <React.Fragment >
-            <SwipeableDrawer
-                open={openDrawer}
-                onClose={() => {
-                    if (formChanged) 
-                        setCancelDialog(true)
-                    else 
-                        setOpenDrawer(false);
-                }}
-                onOpen={() => setOpenDrawer(true)}
-            >
-            {
-                useMemo(() =>
-                    <FormikForm 
-                        header='Employee' 
-                        description={cols} 
-                        setChanged={value => setFormChanged(value)}
-                        updateDialogProps={{
-                            open: updateDialog,
-                            handleClose: () => setUpdateDialog(false)
-                        }}
-                        cancelDialogProps={{
-                            open: cancelDialog,
-                            handleClose: () => setCancelDialog(false),
-                            handleOK: () => {
-                                setCancelDialog(false);
-                                setOpenDrawer(false);
-                                setFormChanged(false);
-                            }
+        <React.Fragment>
+            <AppBar className={classes.searchBar} position="static" color="default" elevation={0}>
+                <Toolbar>
+                <Grid container spacing={2} alignItems="center">
+                    <Grid item>
+                    <Search className={classes.block} color="inherit" />
+                    </Grid>
+                    <Grid item xs>
+                    <TextField
+                        fullWidth
+                        placeholder="Searching.."
+                        InputProps={{
+                        disableUnderline: true,
+                        className: classes.searchInput,
                         }}
                     />
-                , [openDrawer, updateDialog, cancelDialog])
-            }
-                <Grid className={classes.buttonWrapper} container justify='flex-end' alignItems='center'>
-                    <Grid item xs={3}>
-                        <Button 
-                            className={classes.saveButton} 
-                            disabled={!formChanged}
-                            variant="contained"
-                            startIcon={<Save/>}
-                            onClick={() => setUpdateDialog(true)}
-                        > Save </Button>
                     </Grid>
-                    <Grid item xs={3}>
-                        <Button 
-                            className={classes.deleteButton} 
-                            disabled={!formChanged}
-                            variant="contained"
-                            startIcon={<Cancel/>}
-                            onClick={() => setCancelDialog(true)}
-                        > Cancel </Button>
+                    <Grid item>
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        className={classes.addUser}
+                        onClick={() => setInsertDrawer(true)}
+                    >
+                        Add Employee
+                    </Button>
+                    <Tooltip title="Reload">
+                        <IconButton>
+                            <Refresh className={classes.block} color="inherit" />
+                        </IconButton>
+                    </Tooltip>
                     </Grid>
                 </Grid>
-            </SwipeableDrawer>
-            <ReactDataGrid
-                columns={cols}
-                rowGetter={i => employees[i]}
-                rowsCount={employees.length}
-                emptyRowsView={EmptyRowsView}
-                enableCellAutoFocus={false}
-                minHeight={250}
-                maxHeight={450}
-                onCellSelected={({ rowIdx }) => setSelected(employees[rowIdx])} 
-            />
-            {
-                selected.ssn &&
-                <Grid className={classes.actionWrapper} container spacing={2} justify="center" alignItems="center">
-                    <Grid item xs={2}>
-                        <Button 
-                            className={classes.modifyButton} 
-                            variant="contained"
-                            startIcon={<Edit/>}
-                            onClick={() => setOpenDrawer(true)}
-                        >
-                            Modify
-                        </Button>
+                </Toolbar>
+            </AppBar>
+            <div className={classes.contentWrapper}>
+                <DynamicSnackbar
+                    handleClose={() => setOpenSnackbar({...openSnackbar, open: false})}
+                    {...openSnackbar}
+                />
+                <SwipeableDrawer
+                    open={updateDrawer}
+                    onClose={() => {
+                        if (formChanged) 
+                            setCancelDialog(true)
+                        else 
+                            setUpdateDrawer(false);
+                    }}
+                    onOpen={() => setUpdateDrawer(true)}
+                >
+                {
+                    useMemo(() =>
+                        <FormikUpdate 
+                            header='Employee' 
+                            description={cols} 
+                            setChanged={value => setFormChanged(value)}
+                            setValid={value => setFormValid(value)}
+                            updateValues={vls => setValues(vls)}
+                            updateDialogProps={{
+                                open: updateDialog,
+                                handleClose: () => setUpdateDialog(false)
+                            }}
+                            cancelDialogProps={{
+                                open: cancelDialog,
+                                handleClose: () => setCancelDialog(false),
+                                handleOK: () => {
+                                    setCancelDialog(false);
+                                    setUpdateDrawer(false);
+                                    setFormChanged(false);
+                                    setValues({});
+                                }
+                            }}
+                        />
+                    , [updateDrawer, updateDialog, cancelDialog])
+                }
+                
+                    <Grid className={classes.buttonWrapper} container justify='flex-end' alignItems='center'>
+                        <Grid item xs={3}>
+                            <Button 
+                                className={classes.saveButton} 
+                                disabled={!formChanged || !formValid}
+                                variant="contained"
+                                startIcon={<Save/>}
+                                onClick={() => setUpdateDialog(true)}
+                            > Save </Button>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <Button 
+                                className={classes.deleteButton} 
+                                disabled={!formChanged}
+                                variant="contained"
+                                startIcon={<Cancel/>}
+                                onClick={() => setCancelDialog(true)}
+                            > Cancel </Button>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={2}>
-                        <Button 
-                            className={classes.deleteButton} 
-                            variant="contained"
-                            startIcon={<Delete/>}
-                        >
-                            Delete
-                        </Button>
+                </SwipeableDrawer>
+                <SwipeableDrawer
+                    open={insertDrawer}
+                    onClose={() => {
+                        if (formChanged) 
+                            setCancelDialog(true)
+                        else 
+                            setInsertDrawer(false);
+                    }}
+                    onOpen={() => setInsertDrawer(true)}
+                >
+                {
+                    useMemo(() =>
+                        <FormikInsert
+                            header='Add Employee' 
+                            description={cols} 
+                            setChanged={value => setFormChanged(value)}
+                            setValid={value => setFormValid(value)}
+                            updateValues={vls => setValues(vls)}
+                            insertDialogProps={{
+                                open: insertDialog,
+                                handleClose: () => setInsertDialog(false)
+                            }}
+                            cancelDialogProps={{
+                                open: cancelDialog,
+                                handleClose: () => setCancelDialog(false),
+                                handleOK: () => {
+                                    setCancelDialog(false);
+                                    setInsertDrawer(false);
+                                    setFormChanged(false);
+                                    setValues({});
+                                }
+                            }}
+                        />
+                    , [insertDrawer, insertDialog, cancelDialog])
+                }
+                    <Grid className={classes.buttonWrapper} container justify='flex-end' alignItems='center'>
+                        <Grid item xs={3}>
+                            <Button 
+                                className={classes.saveButton} 
+                                disabled={!formChanged || !formValid}
+                                variant="contained"
+                                startIcon={<Save/>}
+                                onClick={() => setInsertDialog(true)}
+                            > Save </Button>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <Button 
+                                className={classes.deleteButton} 
+                                disabled={!formChanged}
+                                variant="contained"
+                                startIcon={<Cancel/>}
+                                onClick={() => setCancelDialog(true)}
+                            > Cancel </Button>
+                        </Grid>
                     </Grid>
-                    
-                </Grid>
-            }
+
+                </SwipeableDrawer>
+                <ReactDataGrid
+                    columns={cols}
+                    rowGetter={i => employees[i]}
+                    rowsCount={employees.length}
+                    emptyRowsView={EmptyRowsView}
+                    enableCellAutoFocus={false}
+                    minHeight={250}
+                    maxHeight={450}
+                    onCellSelected={({ rowIdx }) => setValues(employees[rowIdx])} 
+                />
+                {
+                    values.ssn &&
+                    <Grid className={classes.actionWrapper} container spacing={2} justify="center" alignItems="center">
+                        <Grid item xs={2}>
+                            <Button 
+                                className={classes.modifyButton} 
+                                variant="contained"
+                                startIcon={<Edit/>}
+                                onClick={() => setUpdateDrawer(true)}
+                            >
+                                Modify
+                            </Button>
+                        </Grid>
+                        <Grid item xs={2}>
+                            <Button 
+                                className={classes.deleteButton} 
+                                variant="contained"
+                                startIcon={<Delete/>}
+                                onClick={() => setDeleteDialog(true)}
+                            >
+                                Delete
+                            </Button>
+                        </Grid>
+                        
+                    </Grid>
+                }
+                <ConfirmDialog
+                    open={deleteDialog}
+                    title='Confirm Delete'
+                    content='Are you sure to delete this record?'
+                    handleClose={() => setDeleteDialog(false)}
+                    handleOK={handleDeleteSubmit}
+                />
+            </div>
         </React.Fragment>
     )
 }
