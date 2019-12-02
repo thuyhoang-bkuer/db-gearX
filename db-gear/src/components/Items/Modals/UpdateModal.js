@@ -85,10 +85,33 @@ const styles = theme => ({
 
 function UpdateModal(props) {
 
-    const { classes, header, description, values, setChanged, setFieldValue } = props; 
+    const { 
+        classes,
+        header,
+        description,
+        values,
+        setChanged,
+        setFieldValue,
+        handleSubmit,
+        updateDialogProps,
+        cancelDialogProps
+    } = props; 
 
     return (
         <Grid className={classes.updateDrawer} container justify='center' alignItems='center'>
+            <ConfirmDialog 
+                title='Confirm Update'
+                content='Are you sure updating this record?'
+                handleOK={() => {
+                    handleSubmit(values);
+                }}
+                {...updateDialogProps}
+            />
+            <ConfirmDialog 
+                title='Confirm Discard'
+                content='Are you sure to discard all updates?'
+                {...cancelDialogProps}
+            />
             <Grid item xs={12}>
                 <Typography className={classes.headerDrawer} justify='center' gutterBottom>
                     {header}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import ReactDataGrid from 'react-data-grid';
 import { Grid, Button, SwipeableDrawer } from '@material-ui/core';
 import { withStyles } from '@material-ui/styles';
@@ -9,7 +9,7 @@ import UpdateModal from './Modals/UpdateModal';
 import EmptyRowsView from './EmptyRowsView';
 import API from '../API';
 import ConfirmDialog from './Dialogs/ConfirmDialog';
-
+import * as Yup from 'yup';
 
 
 const defaultColumnConfig = {
@@ -33,6 +33,13 @@ const cols = [
     {key: "password", name: "Password", type: String},
     {key: "leader", name: "Leader's SSN", type: String},
 ].map(col => ({...col, ...defaultColumnConfig}));
+
+const validations = {
+    ssn: Yup.string()
+            .required('Social secure number is required')
+            .length(9, 'SSN must have 9 numbers')
+            .matches('/[0-9]{9}/', 'Invalid SSN')
+};
 
 // const rows = [
 //     {
@@ -143,7 +150,9 @@ function Employee(props) {
     const FormikForm = withFormik({
         mapPropsToValues() {
             return selected;
-        }
+        },
+        // validationSchema: Yup.object().shape(validations),
+        handleSubmit: values => console.log(values)
     })(UpdateModal);
 
     
@@ -168,8 +177,21 @@ function Employee(props) {
                         header='Employee' 
                         description={cols} 
                         setChanged={value => setFormChanged(value)}
+                        updateDialogProps={{
+                            open: updateDialog,
+                            handleClose: () => setUpdateDialog(false)
+                        }}
+                        cancelDialogProps={{
+                            open: cancelDialog,
+                            handleClose: () => setCancelDialog(false),
+                            handleOK: () => {
+                                setCancelDialog(false);
+                                setOpenDrawer(false);
+                                setFormChanged(false);
+                            }
+                        }}
                     />
-                , [openDrawer])
+                , [openDrawer, updateDialog, cancelDialog])
             }
                 <Grid className={classes.buttonWrapper} container justify='flex-end' alignItems='center'>
                     <Grid item xs={3}>
@@ -227,30 +249,6 @@ function Employee(props) {
                     
                 </Grid>
             }
-            <ConfirmDialog 
-                open={updateDialog}
-                title='Confirm Update'
-                content='Are you sure updating this record?'
-                handleClose={() => {
-                    setUpdateDialog(false)
-                }}
-                handleOK={() => {
-                    console.log('Updating..')
-                }}
-            />
-            <ConfirmDialog 
-                open={cancelDialog}
-                title='Confirm Discard'
-                content='Are you sure to discard all updates?'
-                handleClose={() => {
-                    setCancelDialog(false)
-                }}
-                handleOK={() => {
-                    setCancelDialog(false)
-                    setOpenDrawer(false);
-                    setFormChanged(false);
-                }}
-            />
         </React.Fragment>
     )
 }
