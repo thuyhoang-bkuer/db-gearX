@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import ReactDataGrid from 'react-data-grid';
-import EmptyRowsView from './EmptyRowsView';
-import API from '../API';
 import { Grid, Button, SwipeableDrawer } from '@material-ui/core';
 import { withStyles } from '@material-ui/styles';
-import { Edit, Delete } from '@material-ui/icons';
+import { Edit, Delete, Save, Cancel } from '@material-ui/icons';
+import { withFormik } from 'formik';
+
 import UpdateModal from './Modals/UpdateModal';
+import EmptyRowsView from './EmptyRowsView';
+import API from '../API';
+import ConfirmDialog from './Dialogs/ConfirmDialog';
+
 
 
 const defaultColumnConfig = {
@@ -18,12 +22,12 @@ const cols = [
     {key: "last_name", name: "Last Name", frozen: true, type: String},
     {key: "first_name", name: "First Name", frozen: true, type: String},
     {key: "birth_date", name: "Birth", type: Date},
-    {key: "sex", name: "Sex", type: Array('M', 'F')},
+    {key: "sex", name: "Sex", type: ['M', 'F']},
     {key: "bank_no", name: "Bank Number", type: String},
     {key: "address", name: "Address", type: String},
     {key: "start_date", name: "Starting Date", type: Date},
     {key: "salary", name: "Salary", type: Number},
-    {key: "job_type", name: "Job Type", type: String},
+    {key: "job_type", name: "Job Type", type: ['Technician', 'Saler', 'Shipper']},
     {key: "driver_license", name: "Driver License", type: String},
     {key: "username", name: "Username", type: String},
     {key: "password", name: "Password", type: String},
@@ -54,6 +58,10 @@ const styles = theme => ({
         minHeight: '35px',
         paddingTop: '10px',
     },
+    buttonWrapper: {
+        backgroundColor: '#fff',
+        padding: '0px 40px 40px'
+    },
     modifyButton: {
         backgroundColor: '#fcd217',
         color: '#fff',
@@ -82,12 +90,13 @@ const styles = theme => ({
 
 
 
-
-
 function Employee(props) {
     const [employees, setEmployees] = React.useState([]);
     const [selected, setSelected] = React.useState({});
     const [openDrawer, setOpenDrawer] = React.useState(false);
+    const [updateDialog, setUpdateDialog] = React.useState(false);
+    const [cancelDialog, setCancelDialog] = React.useState(false);
+    const [formChanged, setFormChanged] = React.useState(false);
 
     const fetchEmployee = async () => {
         try {
@@ -110,12 +119,6 @@ function Employee(props) {
         }
     }
 
-    const handleSelect = event => {
-        const { rowIdx } = event;
-        setSelected(employees[rowIdx]);
-    }
-
-
     useEffect(() => {
         console.log(employees);
     }, [employees]);
@@ -123,6 +126,10 @@ function Employee(props) {
     useEffect(() => {
         console.log(selected);
     }, [selected]);
+
+    useEffect(() => {
+        console.log('FormChanged: ', formChanged);
+    }, [formChanged]);
     
 
     useEffect(() => {
@@ -133,16 +140,57 @@ function Employee(props) {
         };
     }, []);
 
+    const FormikForm = withFormik({
+        mapPropsToValues() {
+            return selected;
+        }
+    })(UpdateModal);
+
+    
+    
     const { classes } = props;
 
     return (
         <React.Fragment >
             <SwipeableDrawer
                 open={openDrawer}
-                onClose={() => setOpenDrawer(false)}
+                onClose={() => {
+                    if (formChanged) 
+                        setCancelDialog(true)
+                    else 
+                        setOpenDrawer(false);
+                }}
                 onOpen={() => setOpenDrawer(true)}
             >
-                <UpdateModal header='Employee' description={cols} data={selected}/>
+            {
+                useMemo(() =>
+                    <FormikForm 
+                        header='Employee' 
+                        description={cols} 
+                        setChanged={value => setFormChanged(value)}
+                    />
+                , [openDrawer])
+            }
+                <Grid className={classes.buttonWrapper} container justify='flex-end' alignItems='center'>
+                    <Grid item xs={3}>
+                        <Button 
+                            className={classes.saveButton} 
+                            disabled={!formChanged}
+                            variant="contained"
+                            startIcon={<Save/>}
+                            onClick={() => setUpdateDialog(true)}
+                        > Save </Button>
+                    </Grid>
+                    <Grid item xs={3}>
+                        <Button 
+                            className={classes.deleteButton} 
+                            disabled={!formChanged}
+                            variant="contained"
+                            startIcon={<Cancel/>}
+                            onClick={() => setCancelDialog(true)}
+                        > Cancel </Button>
+                    </Grid>
+                </Grid>
             </SwipeableDrawer>
             <ReactDataGrid
                 columns={cols}
@@ -152,7 +200,7 @@ function Employee(props) {
                 enableCellAutoFocus={false}
                 minHeight={250}
                 maxHeight={450}
-                onCellSelected={event => handleSelect(event)} 
+                onCellSelected={({ rowIdx }) => setSelected(employees[rowIdx])} 
             />
             {
                 selected.ssn &&
@@ -179,6 +227,30 @@ function Employee(props) {
                     
                 </Grid>
             }
+            <ConfirmDialog 
+                open={updateDialog}
+                title='Confirm Update'
+                content='Are you sure updating this record?'
+                handleClose={() => {
+                    setUpdateDialog(false)
+                }}
+                handleOK={() => {
+                    console.log('Updating..')
+                }}
+            />
+            <ConfirmDialog 
+                open={cancelDialog}
+                title='Confirm Discard'
+                content='Are you sure to discard all updates?'
+                handleClose={() => {
+                    setCancelDialog(false)
+                }}
+                handleOK={() => {
+                    setCancelDialog(false)
+                    setOpenDrawer(false);
+                    setFormChanged(false);
+                }}
+            />
         </React.Fragment>
     )
 }
