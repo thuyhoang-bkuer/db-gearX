@@ -188,13 +188,20 @@ function Employee(props) {
         try {
             console.log(values.ssn, 'will added')
             const response = await API.post(`employee/`, values);
-            setOpenSnackbar({open: true, variant: 'success', message: 'Success add employee'})
-            setDeleteDialog(false);
-            await fetchEmployee();
+            if (response.data.code === "EREQUEST") {
+                const message = response.data.originalError.info.message.split('.');
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+                setInsertDialog(false);
+            }
+            else {
+                setOpenSnackbar({open: true, variant: 'success', message: 'Success add employee'})
+                setInsertDialog(false);
+                await fetchEmployee();
+            }
         }
         catch (e) {
             setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
-            setDeleteDialog(false);
+            setInsertDialog(false);
         }
         
     }
@@ -216,6 +223,8 @@ function Employee(props) {
             console.log('[Employee] Will Unmount!');
         };
     }, []);
+
+
 
     const FormikUpdate = withFormik({
         validateOnMount: true,

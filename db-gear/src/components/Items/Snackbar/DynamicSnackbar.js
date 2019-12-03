@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-    withStyles, SnackbarContent, Snackbar, IconButton
+    withStyles, SnackbarContent, Snackbar, IconButton, Typography
 } from '@material-ui/core'
 
 import { Close, CheckCircle, Warning, Error, Info } from '@material-ui/icons'
@@ -9,6 +9,9 @@ import { amber, green } from '@material-ui/core/colors'
 import clsx from 'clsx'
 
 const styles = theme => ({
+    snackbar: {
+        maxWidth: '40%',
+    },
     success: {
         backgroundColor: green[600],
     },
@@ -48,6 +51,7 @@ function DynamicSnackbar(props) {
 
     return (
         <Snackbar
+            className={classes.snackbar}
             anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'right',
@@ -62,7 +66,7 @@ function DynamicSnackbar(props) {
                 message={
                     <span id="client-snackbar" className={classes.message}>
                     <Icon className={clsx(classes.icon, classes.iconVariant)} />
-                    {message}
+                    <Typography align='left'>{message}</Typography>
                     </span>
                 }
                 action={[
