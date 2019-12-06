@@ -30,19 +30,19 @@ const defaultColumnConfig = {
 }
 
 const cols = [
-    {key: "ID", name: "Identification", frozen: true, type: String},
-    {key: "Name", name: "FullName", frozen: true, type: String},
+    {key: "id", name: "Identification", frozen: true, type: String},
+    {key: "name", name: "LastName", frozen: true, type: String},
     {key: "sex", name: "Sex", type: ['M', 'F']},
     {key: "address", name: "Address", type: String},
-    {key: "type", name: "Type", type: String},
+    {key: "user_type", name: "Type", type: ['Guest','Patron']},
     {key: "username", name: "Username", type: String},
     {key: "password", name: "Password", type: String},
     {key: "point", name: "Point", type: Number}
 ].map(col => ({...col, ...defaultColumnConfig}));
 
 const validationSchema = Yup.object().shape({
-    ID: Yup.string().required('Identification is required').length(9, 'ID must have 9 digits').matches(/[0-9]{9}/, 'Invalid ID'),
-    Name: Yup.string().required('Name is required'),
+    id: Yup.string().required('Identification is required').length(9, 'ID must have 9 digits').matches(/[0-9]{9}/, 'Invalid ID'),
+    name: Yup.string().required('Name is required'),
     address: Yup.string().required('Address is required'),
     username: Yup.string().min(6).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable()
 });
@@ -160,8 +160,8 @@ function Customer(props) {
 
     const handleDeleteSubmit = async (event) => {
         try {
-            console.log(values.ID, 'will be deleted')
-            const response = await API.delete(`customer/${values.ID}`);
+            console.log(values.id, 'will be deleted')
+            const response = await API.delete(`customer/${values.id}`);
             setOpenSnackbar({open: true, variant: 'success', message: 'Success delete customer'})
             setDeleteDialog(false);
             await fetchCustomer();
@@ -175,7 +175,7 @@ function Customer(props) {
 
     const handleInsertSubmit = async (event) => {
         try {
-            console.log(values.ID, 'will added')
+            console.log(values.id, 'will added')
             const response = await API.post(`customer/`, values);
             if (response.data.code === "EREQUEST") {
                 const message = response.data.originalError.info.message.split('.');
@@ -411,7 +411,7 @@ function Customer(props) {
                     onCellSelected={({ rowIdx }) => setValues(customer[rowIdx])} 
                 />
                 {
-                    values.ID &&
+                    values.id &&
                     <Grid className={classes.actionWrapper} container spacing={2} justify="center" alignItems="center">
                         <Grid item xs={2}>
                             <Button 

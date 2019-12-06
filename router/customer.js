@@ -15,5 +15,10 @@ router.post('/', (req, res) => {
   console.log(params)
   executeProcedure(res, procedure, params);
 })
+router.delete("/:id", function(req , res){
+  const query = `DELETE FROM Customer WHERE id = '${req.params.id}'`;
+  executeQuery (res, query);
+});
+
 
 module.exports = router;
