@@ -6,6 +6,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express(); 
 const employeeRouter = require("./router/employee");
+const customerRouter = require("./router/customer");
 
 // Body Parser Middleware
 app.use(bodyParser.json()); 
@@ -26,4 +27,5 @@ const server = app.listen(process.env.PORT || 3000, () => {
 });
 
 app.use("/api/employee", employeeRouter);
+app.use("/api/customer", customerRouter);
 
