@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
 import { 
@@ -9,8 +9,10 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    Button, 
+    FormHelperText, 
 } from '@material-ui/core';
+
+import _ from 'lodash';
 
 import {
     MuiPickersUtilsProvider,
@@ -18,7 +20,6 @@ import {
 } from '@material-ui/pickers';
 
 import DateFnsUtils from '@date-io/date-fns';
-import { Save, Cancel } from '@material-ui/icons';
 import ConfirmDialog from '../Dialogs/ConfirmDialog';
 
 
@@ -27,6 +28,11 @@ const styles = theme => ({
         width: '400px',
         padding: '40px 40px 20px',
         backgroundColor: '#fff'
+    },
+    insertDrawer: {
+        width: '400px',
+        padding: '40px 40px 20px',
+        backgroundColor: '#50adfa'
     },
     headerDrawer: {
         fontSize: 32,
@@ -83,12 +89,58 @@ const styles = theme => ({
  *      Array[option]
  */
 
-function UpdateModal(props) {
+function FormGenerator(props) {
 
-    const { classes, header, description, values, setChanged, setFieldValue } = props; 
+    const { 
+        classes,
+        header,
+        description,
+        values,
+        errors,
+        submitForm,
+        updateValues,
+        setChanged,
+        setValid,
+        setFieldValue,
+        handleSubmit,
+        insertDialogProps,
+        updateDialogProps,
+        cancelDialogProps
+    } = props; 
+
+    useEffect(() => {
+        setValid(_.size(errors) === 0)
+    }, [errors])
 
     return (
         <Grid className={classes.updateDrawer} container justify='center' alignItems='center'>
+            {
+                insertDialogProps &&
+                <ConfirmDialog 
+                    title='Confirm Addition'
+                    content='Are you sure to add this record?'
+                    handleOK={() => {
+                        handleSubmit(values);
+                    }}
+                    {...insertDialogProps}
+                />
+            }
+            {
+                updateDialogProps &&
+                <ConfirmDialog 
+                    title='Confirm Update'
+                    content='Are you sure updating this record?'
+                    handleOK={() => {
+                        submitForm();
+                    }}
+                    {...updateDialogProps}
+                />
+            }
+            <ConfirmDialog 
+                title='Confirm Discard'
+                content='Are you sure to discard all updates?'
+                {...cancelDialogProps}
+            />
             <Grid item xs={12}>
                 <Typography className={classes.headerDrawer} justify='center' gutterBottom>
                     {header}
@@ -101,7 +153,7 @@ function UpdateModal(props) {
                     {
                         type === Date 
                         ?
-                        <FormControl fullWidth margin='normal'>
+                        <FormControl fullWidth margin='normal' error={!!errors[key]}>
                             <KeyboardDatePicker
                                 disableToolbar
                                 autoOk
@@ -115,17 +167,19 @@ function UpdateModal(props) {
                                 onChange={value => {
                                     setChanged(true);
                                     setFieldValue(key, value);
+                                    updateValues({...values, [key]: value})
                                 }}
                                 KeyboardButtonProps={{
                                     'aria-label': 'change date',
                                 }}
                                 
                             />
+                            <FormHelperText>{errors[key]}</FormHelperText>
                         </FormControl>
                         :
                         type === String || type === Number
                         ?
-                        <FormControl fullWidth margin='normal'>
+                        <FormControl fullWidth margin='normal' error={!!errors[key]}>
                             <InputLabel>{name}</InputLabel>
                             <Input 
                                 name={key} 
@@ -134,11 +188,13 @@ function UpdateModal(props) {
                                 onChange={event => {
                                     setChanged(true);
                                     setFieldValue(key, event.target.value);
+                                    updateValues({...values, [key]: event.target.value})
                                 }}
                             />
+                            <FormHelperText>{errors[key]}</FormHelperText>
                         </FormControl>
                         :
-                        <FormControl fullWidth margin='normal'>
+                        <FormControl fullWidth margin='normal' error={!!errors[key]}>
                             <InputLabel id={key}>{name}</InputLabel>
                             <Select
                                 labelId={`${key}-label`}
@@ -148,10 +204,12 @@ function UpdateModal(props) {
                                 onChange={event => {
                                     setChanged(true);
                                     setFieldValue(key, event.target.value);
+                                    updateValues({...values, [key]: event.target.value})
                                 }}
                             >
                             { type.map((value, id) => <MenuItem key={id} value={value}>{value}</MenuItem>) }
                             </Select>
+                            <FormHelperText>{errors[key]}</FormHelperText>
                         </FormControl>
                     }
                     </Grid>
@@ -162,9 +220,6 @@ function UpdateModal(props) {
     )
 }
 
-UpdateModal.propTypes = {
 
-}
-
-export default withStyles(styles)(UpdateModal);
+export default  withStyles(styles)(FormGenerator);
 

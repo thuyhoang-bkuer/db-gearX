@@ -13,3 +13,6 @@
 - `yarn start` to run the NodeJS server.
 - `cd db-gear && yarn add`
 - `yarn start` to run App UI.
+
+# Confirmation
+- Bui Ba Anh
