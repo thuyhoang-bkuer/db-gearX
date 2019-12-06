@@ -1,4 +1,4 @@
-import Employee from './Employee';
+import Customer from './Customer';
 
 
-export { Employee };
+export { Customer };
