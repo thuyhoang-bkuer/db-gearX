@@ -13,6 +13,11 @@ router.get("/", function(req , res){
   executeQuery (res, query);
 });
 
+router.post("/queries", function(req, res) {
+  const query = `SELECT * FROM Employee WHERE ${req.body.query}`
+  executeQuery(res, query);
+});
+
 //POST API
 router.post("/", function(req , res){
   const params = sqlEmployee.map(({key, type}) => ({key, type, value: type.type === sql.DateTime().type ? new Date(req.body[key]) : req.body[key]}));

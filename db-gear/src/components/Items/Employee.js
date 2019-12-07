@@ -21,6 +21,7 @@ import ConfirmDialog from './Dialogs/ConfirmDialog';
 import * as Yup from 'yup';
 import FormGenerator from './Form/FormGenerator';
 import DynamicSnackbar from './Snackbar/DynamicSnackbar';
+import SearchBar from './SearchBar/SearchBar';
 
 
 
@@ -46,6 +47,8 @@ const cols = [
     {key: "leader", name: "Leader's SSN", type: String},
 ].map(col => ({...col, ...defaultColumnConfig}));
 
+const fields = cols.map(({key, name}) => ({id: key, text: name}));
+
 const validationSchema = Yup.object().shape({
     ssn: Yup.string().required('Social secure number is required').length(9, 'SSN must have 9 digits').matches(/[0-9]{9}/, 'Invalid SSN'),
     last_name: Yup.string().required('Lastname is required'),
@@ -57,25 +60,6 @@ const validationSchema = Yup.object().shape({
     username: Yup.string().min(6).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable(),
     leader: Yup.string().length(9, 'SSN must have 9 digits').matches(/[0-9]{9}/, 'Invalid SSN').nullable()
 });
-
-// const rows = [
-//     {
-//         "ssn": "000000001",
-//         "first_name": "Thuy",
-//         "last_name": "Hoang Vu Trong",
-//         "birth_date": "1999-11-07T00:00:00.000Z",
-//         "sex": "M",
-//         "bank_no": "9704480857466233",
-//         "address": "53 TKX, 7th, Phu Nhuan, HCM City",
-//         "start_date": "2019-01-09T00:00:00.000Z",
-//         "salary": 450,
-//         "job_type": "Technician",
-//         "driver_license": null,
-//         "username": null,
-//         "password": null,
-//         "leader": null
-//     }
-// ];
 
 const styles = theme => ({
     actionWrapper: {
@@ -112,11 +96,13 @@ const styles = theme => ({
     },
     searchBar: {
         borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+        height: '100px'
     },
         searchInput: {
         fontSize: theme.typography.fontSize,
     },
     block: {
+        margin: '10px',
         display: 'block',
     },
     addUser: {
@@ -132,6 +118,7 @@ const styles = theme => ({
 function Employee(props) {
     const [employees, setEmployees]       = React.useState([]);
     const [values, setValues]             = React.useState({});
+    const [query, setQuery]               = React.useState('');
     const [updateDrawer, setUpdateDrawer] = React.useState(false);
     const [insertDrawer, setInsertDrawer] = React.useState(false);
     const [deleteDialog, setDeleteDialog] = React.useState(false);
@@ -148,7 +135,7 @@ function Employee(props) {
             setEmployees(response.data[0]);
         }
         catch (e) {
-            
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
         }
     }
 
@@ -166,6 +153,23 @@ function Employee(props) {
     const handleUpdateSubmit = values => {
         const message = updateEmployee(values);
         console.log(message)
+    }
+
+    const handleSearch = async () => {
+        try {
+            console.log('[Query]', query)
+            const response = await API.post(`employee/queries`, { query });
+            if (response.data.code === "EREQUEST") {
+                const message = response.data.originalError.info.message.split('.');
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+            }
+            else {
+                setEmployees(response.data[0]);
+            }
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+        }
     }
 
 
@@ -262,17 +266,18 @@ function Employee(props) {
                 <Toolbar>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item>
-                    <Search className={classes.block} color="inherit" />
+                        <Tooltip title="Search">
+                            <IconButton onClick={handleSearch}>
+                                <Search className={classes.block} color="inherit" />
+                            </IconButton>
+                        </Tooltip>
+                        
                     </Grid>
                     <Grid item xs>
-                    <TextField
-                        fullWidth
-                        placeholder="Searching.."
-                        InputProps={{
-                        disableUnderline: true,
-                        className: classes.searchInput,
-                        }}
-                    />
+                        <SearchBar 
+                            fields={fields}
+                            handleQuery={queryStr => setQuery(queryStr)}
+                        />
                     </Grid>
                     <Grid item>
                     <Button 
@@ -284,7 +289,7 @@ function Employee(props) {
                         Add Employee
                     </Button>
                     <Tooltip title="Reload">
-                        <IconButton>
+                        <IconButton onClick={fetchEmployee}>
                             <Refresh className={classes.block} color="inherit" />
                         </IconButton>
                     </Tooltip>
