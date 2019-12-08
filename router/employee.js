@@ -29,7 +29,7 @@ router.post("/", function(req , res){
 //PUT API
 router.put("/:id", function(req , res){
   const params = sqlEmployee.map(({key, type}) => ({key, type, value: type.type === sql.DateTime().type ? new Date(req.body[key]) : req.body[key]}));
-  const procedure = `USP_updateEmployeeBySsn`;
+  const procedure = `USP_updateEmployee`;
   console.log(params)
   executeProcedure(res, procedure, params);
 });

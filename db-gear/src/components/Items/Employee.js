@@ -150,9 +150,24 @@ function Employee(props) {
         }
     }
 
-    const handleUpdateSubmit = values => {
-        const message = updateEmployee(values);
-        console.log(message)
+    const handleUpdateSubmit = async values => {
+        try {
+            console.log(values.ssn, 'will be updated')
+            const response = await API.put(`employee/${values.ssn}`, values);
+            if (response.data.code === "EREQUEST") {
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+                setUpdateDialog(false);
+            }
+            else {
+                setOpenSnackbar({open: true, variant: 'success', message: 'Success add employee'})
+                setUpdateDialog(false);
+                await fetchEmployee();
+            }
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+            setUpdateDialog(false);
+        }
     }
 
     const handleSearch = async () => {
@@ -237,8 +252,10 @@ function Employee(props) {
         },
         validationSchema: validationSchema,
         handleSubmit: (values, { setSubmitting }) => {
-            // handleInsertSubmit(values);
+            handleUpdateSubmit(values);
             setSubmitting(false);
+            setUpdateDialog(false);
+            setFormChanged(false);
         },
     })(FormGenerator);
 
