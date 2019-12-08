@@ -32,17 +32,17 @@ const defaultColumnConfig = {
 const cols = [
     {key: "prod_id", name: "Product id", frozen: true, type: String},
     {key: "cost", name: "Product cost", frozen: true, type: String},
-    {key: "producer", name: "Producer", frozen: true, type: Int},
+    {key: "producer", name: "Producer", frozen: true, type: String},
     {key: "prod_type", name: "Product type", type: String},
-    {key: "remain", name: "Product remain", type: Int}
+    {key: "remain", name: "Product remain", type: String}
 ].map(col => ({...col, ...defaultColumnConfig}));
 
 const validationSchema = Yup.object().shape({
     prod_id: Yup.string().required('Product id is required').length(7, 'prod_id must have 7 digits').matches(/[0-9]{7}/, 'Invalid prod_id'),
-    cost: Yup.Int().required('Cost is required'),
+    cost: Yup.string().required('Cost is required'),
     producer: Yup.string().required('Producer is required'),
     prod_type: Yup.string().required('Product Type is required'),
-    remain: Yup.Int().required('Remain is required'),
+    remain: Yup.string().required('Remain is required'),
 });
 
 // const rows = [
@@ -159,7 +159,7 @@ function Product(props) {
     const handleDeleteSubmit = async (event) => {
         try {
             console.log(values.prod_id, 'will be deleted')
-            const response = await API.delete(`employee/${values.ssn}`);
+            const response = await API.delete(`product/${values.prod_id}`);
             setOpenSnackbar({open: true, variant: 'success', message: 'Success delete product'})
             setDeleteDialog(false);
             await fetchProduct();
@@ -173,7 +173,7 @@ function Product(props) {
 
     const handleInsertSubmit = async (event) => {
         try {
-            console.log(values.ssn, 'will added')
+            console.log(values.prod_id, 'will added')
             const response = await API.post(`product/`, values);
             if (response.data.code === "EREQUEST") {
                 const message = response.data.originalError.info.message.split('.');
@@ -195,8 +195,8 @@ function Product(props) {
 
 
     useEffect(() => {
-        console.log(employees);
-    }, [employees]);
+        console.log(product);
+    }, [product]);
 
     useEffect(() => {
         console.log('FormChanged: ', formChanged);
@@ -268,7 +268,7 @@ function Product(props) {
                         className={classes.addUser}
                         onClick={() => setInsertDrawer(true)}
                     >
-                        Add Employee
+                        Add Product
                     </Button>
                     <Tooltip title="Reload">
                         <IconButton>
@@ -447,4 +447,4 @@ function Product(props) {
 }
 
 
-export default withStyles(styles)(Employee);
+export default withStyles(styles)(Product);

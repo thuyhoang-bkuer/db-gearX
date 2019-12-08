@@ -1,4 +1,5 @@
 import Employee from './Employee';
+import Product from './Product';
 
 
-export { Employee };
+export { Employee, Product };
