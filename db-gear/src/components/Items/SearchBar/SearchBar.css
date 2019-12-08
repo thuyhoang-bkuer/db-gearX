@@ -1,0 +1,150 @@
+/**
+* <div class="ReactTags">
+*   <div class="ReactTags__selected">
+*     <button class="ReactTags__selected-tag">
+*       <span class="ReactTags__selected-tag-name" />
+*     </button>
+*   </div>
+*   <div class="ReactTags__search">
+*     <div class="ReactTags__search-input">
+*       <input />
+*       <div />
+*     </div>
+*     <div class="ReactTags__suggestions">
+*       <ul>
+*         <li class="is-active">
+*           <mark />
+*         </li>
+*         <li class="is-disabled">
+*           <mark />
+*         </li>
+*       </ul>
+*     </div>
+*   </div>
+*/
+.ReactTags__tags {
+    margin: 20px 0;
+    min-height: 80px;
+}
+
+.ReactTags__selected {
+    margin: 10px 0;
+
+}
+
+
+.ReactTags__tag {
+    display: inline-block;
+    box-sizing: border-box;
+    margin: 0 6px 6px 0;
+    padding: 6px 8px;
+    border: 0px;
+    border-radius: 2px;
+    background: #a413e8;
+    color: #fff;
+    box-shadow: 0 3px 6px rgba(164, 19, 232, 0.4);
+
+    /* match the font styles */
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.ReactTags__remove {
+    content: '\2715';
+    color: #fff;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+.ReactTags__tag:hover {
+   background:  #710b99;
+}
+
+
+.ReactTags__tagInputField {
+    font: inherit;
+    color: currentColor;
+    width: 100%;
+    border: 0;
+    height: 1.1875em;
+    margin: 5px 0;
+    display: flex;
+    padding: 6px 0 7px;
+    min-width: 0;
+    background: none;
+    box-sizing: content-box;
+    
+    -webkit-tap-highlight-color: transparent;
+
+}
+
+.ReactTags__tagInput input:focus {
+    outline: none;
+    background: none;
+}
+
+
+@media screen and (min-width: 30em) {
+
+    .ReactTags__search {
+        /* this will become the offsetParent for suggestions */
+        position: relative;
+    }
+
+}
+
+
+.ReactTags__search input::-ms-clear {
+    display: none;
+}
+
+.ReactTags__suggestions {
+    position: absolute;
+    top: 40%;
+    left: 9%;
+    width: 100%;
+    z-index: 1000;
+}
+
+@media screen and (min-width: 30em) {
+
+    .ReactTags__suggestions {
+        width: 240px;
+    }
+
+}
+
+.ReactTags__suggestions ul {
+    margin: 4px -1px;
+    padding: 0;
+    list-style: none;
+    background: white;
+    border: 0px;
+    border-radius: 2px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.ReactTags__suggestions li {
+    border-bottom: 1px solid #ddd;
+    padding: 6px 8px;
+}
+
+.ReactTags__suggestions li mark {
+    color: #1ab3f4;
+    background: none;
+    font-weight: 600;
+}
+
+.ReactTags__suggestions li:hover {
+    cursor: pointer;
+    background: #eee;
+}
+
+.ReactTags__suggestions li.is-active {
+    background: #b7cfe0;
+}
+
+.ReactTags__suggestions li.is-disabled {
+    opacity: 0.5;
+    cursor: auto;
+}
