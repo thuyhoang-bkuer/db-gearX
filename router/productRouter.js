@@ -23,6 +23,7 @@ router.post("/", function(req , res){
 
 //PUT API
 router.put("/:id", function(req , res){
+  console.log("OK")
   const params = productSchema.map(({key, type}) => ({key, type, value: type.type === sql.DateTime().type ? new Date(req.body[key]) : req.body[key]}));
   const procedure = `USP_updateProduct`;
   console.log(params)

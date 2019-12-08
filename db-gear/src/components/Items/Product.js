@@ -117,7 +117,7 @@ const styles = theme => ({
 
 
 function Product(props) {
-    const [product, setProduct]       = React.useState([]);
+    const [products, setProducts]       = React.useState([]);
     const [values, setValues]             = React.useState({});
     const [updateDrawer, setUpdateDrawer] = React.useState(false);
     const [insertDrawer, setInsertDrawer] = React.useState(false);
@@ -132,7 +132,7 @@ function Product(props) {
     const fetchProduct = async () => {
         try {
             const response = await API.get(`product`);
-            setProduct(response.data[0]);
+            setProducts(response.data[0]);
         }
         catch (e) {
             
@@ -150,10 +150,42 @@ function Product(props) {
         }
     }
 
-    const handleUpdateSubmit = values => {
-        const message = updateProduct(values);
-        console.log(message)
-    }
+    const handleUpdateSubmit = async values => {
+      try {
+          console.log(values.prod_id, 'will be updated')
+          const response = await API.put(`product/${values.prod_id}`, values);
+          if (response.data.code === "EREQUEST") {
+              setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+              setUpdateDialog(false);
+          }
+          else {
+              setOpenSnackbar({open: true, variant: 'success', message: 'Success add product'})
+              setUpdateDialog(false);
+              await fetchProduct();
+          }
+      }
+      catch (e) {
+          setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+          setUpdateDialog(false);
+      }
+  }
+
+  // const handleSearch = async () => {
+  //     try {
+  //         console.log('[Query]', query)
+  //         const response = await API.post(`employee/queries`, { query });
+  //         if (response.data.code === "EREQUEST") {
+  //             const message = response.data.originalError.info.message.split('.');
+  //             setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+  //         }
+  //         else {
+  //             setEmployees(response.data[0]);
+  //         }
+  //     }
+  //     catch (e) {
+  //         setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+  //     }
+  // }
 
 
     const handleDeleteSubmit = async (event) => {
@@ -195,8 +227,8 @@ function Product(props) {
 
 
     useEffect(() => {
-        console.log(product);
-    }, [product]);
+        console.log(products);
+    }, [products]);
 
     useEffect(() => {
         console.log('FormChanged: ', formChanged);
@@ -220,8 +252,10 @@ function Product(props) {
         },
         validationSchema: validationSchema,
         handleSubmit: (values, { setSubmitting }) => {
-            // handleInsertSubmit(values);
+            handleUpdateSubmit(values);
             setSubmitting(false);
+            setUpdateDialog(false);
+            setFormChanged(false);
         },
     })(FormGenerator);
 
@@ -400,13 +434,13 @@ function Product(props) {
                 </SwipeableDrawer>
                 <ReactDataGrid
                     columns={cols}
-                    rowGetter={i => product[i]}
-                    rowsCount={product.length}
+                    rowGetter={i => products[i]}
+                    rowsCount={products.length}
                     emptyRowsView={EmptyRowsView}
                     enableCellAutoFocus={false}
                     minHeight={250}
                     maxHeight={450}
-                    onCellSelected={({ rowIdx }) => setValues(product[rowIdx])} 
+                    onCellSelected={({ rowIdx }) => setValues(products[rowIdx])} 
                 />
                 {
                     values.prod_id &&
