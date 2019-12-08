@@ -27,7 +27,7 @@ const styles = theme => ({
     updateDrawer: {
         width: '400px',
         padding: '40px 40px 20px',
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
     },
     insertDrawer: {
         width: '400px',
@@ -148,7 +148,7 @@ function FormGenerator(props) {
             </Grid>
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
             {
-                description.map(({key, name, type}) => (
+                description.map(({key, name, type, lock}) => (
                     <Grid key={key} item xs={12}>
                     {
                         type === Date 
@@ -185,6 +185,7 @@ function FormGenerator(props) {
                                 name={key} 
                                 value={values[key] || ''} 
                                 fullWidth 
+                                disabled={updateDialogProps && lock === true}
                                 onChange={event => {
                                     setChanged(true);
                                     setFieldValue(key, event.target.value);
@@ -197,6 +198,7 @@ function FormGenerator(props) {
                         <FormControl fullWidth margin='normal' error={!!errors[key]}>
                             <InputLabel id={key}>{name}</InputLabel>
                             <Select
+                                disabled={updateDialogProps && lock === true}
                                 labelId={`${key}-label`}
                                 id={key}
                                 name={key}

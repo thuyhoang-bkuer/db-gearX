@@ -6,14 +6,12 @@ import {
     SwipeableDrawer, 
     AppBar, 
     Toolbar,
-    TextField,
     Tooltip,
     IconButton
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/styles';
 import { Edit, Delete, Save, Cancel, Search, Refresh } from '@material-ui/icons';
 import { withFormik } from 'formik';
-import _ from 'lodash';
 
 import EmptyRowsView from './EmptyRowsView';
 import API from '../API';
@@ -139,17 +137,6 @@ function Employee(props) {
         }
     }
 
-    const updateEmployee = async (data) => {
-        // data: JSON()
-        try {
-            const response = await API.post(`employee`, data);
-            return response.data;
-        }
-        catch (e) {
-            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
-        }
-    }
-
     const handleUpdateSubmit = async values => {
         try {
             console.log(values.ssn, 'will be updated')
@@ -175,7 +162,7 @@ function Employee(props) {
             console.log('[Query]', query)
             const response = await API.post(`employee/queries`, { query });
             if (response.data.code === "EREQUEST") {
-                const message = response.data.originalError.info.message.split('.');
+                // const message = response.data.originalError.info.message.split('.');
                 setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
             }
             else {
@@ -191,7 +178,6 @@ function Employee(props) {
     const handleDeleteSubmit = async (event) => {
         try {
             console.log(values.ssn, 'will be deleted')
-            const response = await API.delete(`employee/${values.ssn}`);
             setOpenSnackbar({open: true, variant: 'success', message: 'Success delete employee'})
             setDeleteDialog(false);
             await fetchEmployee();
@@ -208,7 +194,6 @@ function Employee(props) {
             console.log(values.ssn, 'will added')
             const response = await API.post(`employee/`, values);
             if (response.data.code === "EREQUEST") {
-                const message = response.data.originalError.info.message.split('.');
                 setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
                 setInsertDialog(false);
             }
