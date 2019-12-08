@@ -14,6 +14,11 @@ router.get("/", function(req , res){
 });
 
 //POST API
+router.post("/queries", function(req, res) {
+  const query = `SELECT * FROM Product WHERE ${req.body.query}`
+  executeQuery(res, query);
+});
+
 router.post("/", function(req , res){
   const params = productSchema.map(({key, type}) => ({key, type, value: type.type === sql.DateTime().type ? new Date(req.body[key]) : req.body[key]}));
   const procedure = `USP_insertProduct`;
