@@ -5,10 +5,16 @@ require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express(); 
+<<<<<<< HEAD
 const employeeRouter = require("./router/employee");
 const ordersRouter = require("./router/orders");
 const itemRouter = require("./router/item");
+=======
+>>>>>>> origin/Dang
 
+const employeeRouter = require("./router/employee");
+const customerRouter = require("./router/customer");
+const productRouter = require("./router/productRouter");
 // Body Parser Middleware
 app.use(bodyParser.json()); 
 
@@ -28,6 +34,11 @@ const server = app.listen(process.env.PORT || 3000, () => {
 });
 
 app.use("/api/employee", employeeRouter);
+<<<<<<< HEAD
 app.use("/api/orders", ordersRouter);
 app.use("/api/item", itemRouter);
+=======
+app.use("/api/customer", customerRouter);
+app.use("/api/product", productRouter);
+>>>>>>> origin/Dang
 
