@@ -1,7 +1,7 @@
 const sql = require("mssql");
 
 const customerSchema = [
-  {key: "cus_id", name: "identifierr", type: sql.Char()},
+  {key: "cus_id", name: "identifier", type: sql.Char()},
   {key: "cus_name", name: "Name", type: sql.VarChar()},
   {key: "sex", name: "Sex", type: sql.VarChar()},
   {key: "cus_address", name: "Address", type: sql.VarChar()},
