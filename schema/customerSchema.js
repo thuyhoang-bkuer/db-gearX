@@ -7,7 +7,7 @@ const sqlCustomer = [
     {key: "address", name: "Address", type: sql.VarChar()},
     {key: "user_type", name: "Type", type: sql.VarChar()},
     {key: "username", name: "Username", type: sql.VarChar()},
-    {key: "password", name: "Password", type: sql.VarChar()},
+    {key: "password", name: "Password", type: sql.Char()},
     {key: "point", name: "Point", type: sql.Int()}
 ];
 

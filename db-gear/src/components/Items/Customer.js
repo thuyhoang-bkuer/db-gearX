@@ -43,8 +43,10 @@ const cols = [
 const validationSchema = Yup.object().shape({
     id: Yup.string().required('Identification is required').length(9, 'ID must have 9 digits').matches(/[0-9]{9}/, 'Invalid ID'),
     name: Yup.string().required('Name is required'),
+    sex: Yup.string().required('Sex is required'),
     address: Yup.string().required('Address is required'),
-    username: Yup.string().min(6).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable()
+    username: Yup.string().min(9).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable(),
+    password: Yup.string().min(1).max(32).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid password').nullable()
 });
 
 // const rows = [
@@ -152,9 +154,24 @@ function Customer(props) {
         }
     }
 
-    const handleUpdateSubmit = values => {
-        const message = updateCustomer(values);
-        console.log(message)
+    const handleUpdateSubmit = async values => {
+        try {
+            console.log(values.id, 'will be updated')
+            const response = await API.put(`customer/${values.id}`, values);
+            if (response.data.code === "EREQUEST") {
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+                setUpdateDialog(false);
+            }
+            else {
+                setOpenSnackbar({open: true, variant: 'success', message: 'Success add customer'})
+                setUpdateDialog(false);
+                await fetchCustomer();
+            }
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+            setUpdateDialog(false);
+        }
     }
 
 

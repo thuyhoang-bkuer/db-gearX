@@ -14,7 +14,6 @@ const executeQuery = async (res, query) => {
           res.send(err);
       } else {
           const { recordsets } = queryResult
-          console.log(recordsets)
           res.send(recordsets);
       }
       sqlPool.close();
