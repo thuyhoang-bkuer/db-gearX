@@ -47,7 +47,7 @@ const validationSchema = Yup.object().shape({
     name: Yup.string().required('Name is required'),
     sex: Yup.string().required('Sex is required'),
     address: Yup.string().required('Address is required'),
-    username: Yup.string().min(9).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable(),
+    username: Yup.string().min(4).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable(),
     password: Yup.string().min(1).max(32).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid password').nullable()
 });
 
