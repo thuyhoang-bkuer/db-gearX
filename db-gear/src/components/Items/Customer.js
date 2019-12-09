@@ -21,6 +21,7 @@ import ConfirmDialog from './Dialogs/ConfirmDialog';
 import * as Yup from 'yup';
 import FormGenerator from './Form/FormGenerator';
 import DynamicSnackbar from './Snackbar/DynamicSnackbar';
+import SearchBar from './SearchBar/SearchBar';
 
 
 
@@ -39,6 +40,7 @@ const cols = [
     {key: "password", name: "Password", type: String},
     {key: "point", name: "Point", type: Number}
 ].map(col => ({...col, ...defaultColumnConfig}));
+const fields = cols.map(({key, name}) => ({id: key, text: name}));
 
 const validationSchema = Yup.object().shape({
     id: Yup.string().required('Identification is required').length(9, 'ID must have 9 digits').matches(/[0-9]{9}/, 'Invalid ID'),
@@ -48,25 +50,6 @@ const validationSchema = Yup.object().shape({
     username: Yup.string().min(9).max(24).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid username').nullable(),
     password: Yup.string().min(1).max(32).matches(/[_a-zA-Z][a-zA-Z0-9]*/, 'Invalid password').nullable()
 });
-
-// const rows = [
-//     {
-//         "ssn": "000000001",
-//         "first_name": "Thuy",
-//         "last_name": "Hoang Vu Trong",
-//         "birth_date": "1999-11-07T00:00:00.000Z",
-//         "sex": "M",
-//         "bank_no": "9704480857466233",
-//         "address": "53 TKX, 7th, Phu Nhuan, HCM City",
-//         "start_date": "2019-01-09T00:00:00.000Z",
-//         "salary": 450,
-//         "job_type": "Technician",
-//         "driver_license": null,
-//         "username": null,
-//         "password": null,
-//         "leader": null
-//     }
-// ];
 
 const styles = theme => ({
     actionWrapper: {
@@ -103,11 +86,13 @@ const styles = theme => ({
     },
     searchBar: {
         borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+        height: '100px'
     },
         searchInput: {
         fontSize: theme.typography.fontSize,
     },
     block: {
+        margin: '10px',
         display: 'block',
     },
     addUser: {
@@ -121,8 +106,9 @@ const styles = theme => ({
 
 
 function Customer(props) {
-    const [customer, setCustomer]         = React.useState([]);
+    const [customers, setCustomers]       = React.useState([]);
     const [values, setValues]             = React.useState({});
+    const [query, setQuery]               = React.useState('');
     const [updateDrawer, setUpdateDrawer] = React.useState(false);
     const [insertDrawer, setInsertDrawer] = React.useState(false);
     const [deleteDialog, setDeleteDialog] = React.useState(false);
@@ -136,10 +122,10 @@ function Customer(props) {
     const fetchCustomer = async () => {
         try {
             const response = await API.get(`customer`);
-            setCustomer(response.data[0]);
+            setCustomers(response.data[0]);
         }
         catch (e) {
-            
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
         }
     }
 
@@ -171,6 +157,23 @@ function Customer(props) {
         catch (e) {
             setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
             setUpdateDialog(false);
+        }
+    }
+
+    const handleSearch = async () => {
+        try {
+            console.log('[Query]', query)
+            const response = await API.post(`customer/queries`, { query });
+            if (response.data.code === "EREQUEST") {
+                const message = response.data.originalError.info.message.split('.');
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+            }
+            else {
+                setCustomers(response.data[0]);
+            }
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
         }
     }
 
@@ -214,8 +217,8 @@ function Customer(props) {
 
 
     useEffect(() => {
-        console.log(customer);
-    }, [customer]);
+        console.log(customers);
+    }, [customers]);
 
     useEffect(() => {
         console.log('FormChanged: ', formChanged);
@@ -239,8 +242,10 @@ function Customer(props) {
         },
         validationSchema: validationSchema,
         handleSubmit: (values, { setSubmitting }) => {
-            // handleInsertSubmit(values);
+            handleUpdateSubmit(values);
             setSubmitting(false);
+            setUpdateDialog(false);
+            setFormChanged(false);
         },
     })(FormGenerator);
 
@@ -268,17 +273,18 @@ function Customer(props) {
                 <Toolbar>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item>
-                    <Search className={classes.block} color="inherit" />
+                        <Tooltip title="Search">
+                            <IconButton onClick={handleSearch}>
+                                <Search className={classes.block} color="inherit" />
+                            </IconButton>
+                        </Tooltip>
+                        
                     </Grid>
                     <Grid item xs>
-                    <TextField
-                        fullWidth
-                        placeholder="Searching.."
-                        InputProps={{
-                        disableUnderline: true,
-                        className: classes.searchInput,
-                        }}
-                    />
+                        <SearchBar 
+                            fields={fields}
+                            handleQuery={queryStr => setQuery(queryStr)}
+                        />
                     </Grid>
                     <Grid item>
                     <Button 
@@ -290,7 +296,7 @@ function Customer(props) {
                         Add Customer
                     </Button>
                     <Tooltip title="Reload">
-                        <IconButton>
+                        <IconButton onClick={fetchCustomer}>
                             <Refresh className={classes.block} color="inherit" />
                         </IconButton>
                     </Tooltip>
@@ -419,13 +425,13 @@ function Customer(props) {
                 </SwipeableDrawer>
                 <ReactDataGrid
                     columns={cols}
-                    rowGetter={i => customer[i]}
-                    rowsCount={customer.length}
+                    rowGetter={i => customers[i]}
+                    rowsCount={customers.length}
                     emptyRowsView={EmptyRowsView}
                     enableCellAutoFocus={false}
                     minHeight={250}
                     maxHeight={450}
-                    onCellSelected={({ rowIdx }) => setValues(customer[rowIdx])} 
+                    onCellSelected={({ rowIdx }) => setValues(customers[rowIdx])} 
                 />
                 {
                     values.id &&

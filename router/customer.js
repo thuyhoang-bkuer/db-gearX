@@ -18,6 +18,12 @@ router.post('/', (req, res) => {
   executeProcedure(res, procedure, params);
 })
 
+router.post("/queries", function(req, res) {
+  const query = `${req.body.query}`
+  console.log(req.body.query)
+  executeQuery(res, query);
+});
+
 router.put("/:id", function(req , res){
   const params = sqlCustomer.map(({key, type}) => ({key, type, value: type.type === sql.DateTime().type ? new Date(req.body[key]) : req.body[key]}));
   const procedure = `USP_updateCustomer`;
