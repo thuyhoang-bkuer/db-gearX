@@ -31,8 +31,16 @@ router.put("/:id", function(req , res){
 });
 
 router.delete("/:id", function(req , res){
-  const query = `DELETE FROM Customer WHERE id = '${req.params.id}'`;
-  executeQuery (res, query);
+  const params = sqlCustomer[0].value;
+  console.log(params);
+  const query = `
+  alter table Orders nocheck constraint FK_Orders_cid
+	alter table Customer_Email nocheck constraint FK_Customer_Email_cid
+	delete from Customer where id = '${req.params.id}' 
+	alter table Customer_Email nocheck constraint FK_Customer_Email_cid
+	alter table Orders nocheck constraint FK_Orders_cid
+  `;
+  executeQuery(res, query);
 });
 
 
