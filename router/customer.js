@@ -18,6 +18,12 @@ router.post('/', (req, res) => {
   executeProcedure(res, procedure, params);
 })
 
+router.post("/queries", function(req, res) {
+  const query = `${req.body.query}`
+  console.log(req.body.query)
+  executeQuery(res, query);
+});
+
 router.put("/:id", function(req , res){
   const params = sqlCustomer.map(({key, type}) => ({key, type, value: type.type === sql.DateTime().type ? new Date(req.body[key]) : req.body[key]}));
   const procedure = `USP_updateCustomer`;
@@ -25,8 +31,16 @@ router.put("/:id", function(req , res){
 });
 
 router.delete("/:id", function(req , res){
-  const query = `DELETE FROM Customer WHERE id = '${req.params.id}'`;
-  executeQuery (res, query);
+  const params = sqlCustomer[0].value;
+  console.log(params);
+  const query = `
+  alter table Orders nocheck constraint FK_Orders_cid
+	alter table Customer_Email nocheck constraint FK_Customer_Email_cid
+	delete from Customer where id = '${req.params.id}' 
+	alter table Customer_Email nocheck constraint FK_Customer_Email_cid
+	alter table Orders nocheck constraint FK_Orders_cid
+  `;
+  executeQuery(res, query);
 });
 
 
