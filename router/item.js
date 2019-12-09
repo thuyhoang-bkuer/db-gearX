@@ -13,8 +13,8 @@ router.get("/", function(req , res){
   executeQuery (res, query);
 });
 
-router.post("/where", function(req, res) {
-    const query = `SELECT * FROM Item WHERE ${req.body.query}`
+router.post("/queries/:id", function(req, res) {
+    const query = `SELECT * FROM Item WHERE order_id = '${req.params.id}' AND ${req.body.query}`
     executeQuery(res, query);
 });
 

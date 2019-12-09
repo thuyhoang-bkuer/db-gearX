@@ -8,6 +8,9 @@ const operators = [
     {id: 'AND', text: 'AND'},
     {id: 'OR', text: 'OR'},
     {id: 'LIKE', text: 'LIKE'},
+    {id: 'ORDER BY', text: 'ORDER BY'},
+    {id: 'ASC', text: 'ASC'},
+    {id: 'DESC', text: 'DESC'},
     {id: '=', text: '='},
     {id: '>', text: '>'},
     {id: '>=', text: '>='},
@@ -21,7 +24,7 @@ const KeyCodes = {
     enter: 13,
   };
    
-const delimiters = [KeyCodes.comma, KeyCodes.enter];
+const delimiters = [KeyCodes.enter];
 
 
 

@@ -20,8 +20,9 @@ router.get("/:id/items", function(req, res){
     executeProcedure(res, procedure, params);
 })
 
-router.post("/where", function(req, res) {
+router.post("/queries/", function(req, res) {
     const query = `SELECT * FROM Orders WHERE ${req.body.query}`
+    console.log(query);
     executeQuery(res, query);
 });
 

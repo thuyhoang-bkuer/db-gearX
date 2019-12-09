@@ -171,7 +171,7 @@ function Item({ init, classes }) {
     const handleSearch = async () => {
         try {
             console.log('[Query]', query)
-            const response = await API.get(`item/${query}`);
+            const response = await API.post(`item/queries/${init.order_id}`, { query });
             if (response.data.code === "EREQUEST") {
                 const message = response.data.originalError.info.message.split('.');
                 setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})

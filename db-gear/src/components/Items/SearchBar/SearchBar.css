@@ -148,3 +148,10 @@
     opacity: 0.5;
     cursor: auto;
 }
+
+.react-grid-Cell {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}

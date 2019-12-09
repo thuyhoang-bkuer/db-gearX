@@ -44,7 +44,7 @@ const orderCols = [
 ].map(col => ({...col, ...defaultColumnConfig}));
 
 const orderInsert = [
-    {key: "status", name: "Status", type: ['Confirming', 'Processing', 'Transfering', 'Done', 'Cancel']},
+    {key: "status", name: "Status", type: ['Confirming', 'Processing', 'Transfering', 'Successful', 'Cancel']},
     {key: "payment_type", name: "Payment Type", type: ['COD', 'Credit', 'OnlBanking']},
     {key: "cid", name: "CustomerID", type: String},
     {key: "essn", name: "Employee SSN", type: String}
@@ -180,7 +180,7 @@ function Orders(props) {
     const handleSearch = async () => {
         try {
             console.log('[Query]', query)
-            const response = await API.get(`orders/${query}`);
+            const response = await API.post(`orders/queries/`, { query });
             if (response.data.code === "EREQUEST") {
                 const message = response.data.originalError.info.message.split('.');
                 setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})

@@ -177,10 +177,16 @@ function Employee(props) {
 
     const handleDeleteSubmit = async (event) => {
         try {
-            console.log(values.ssn, 'will be deleted')
-            setOpenSnackbar({open: true, variant: 'success', message: 'Success delete employee'})
-            setDeleteDialog(false);
-            await fetchEmployee();
+            const response = await API.delete(`employee/${values.ssn}`);
+            if (response.data.code === "EREQUEST") {
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+                setDeleteDialog(false);
+            }
+            else {
+                setOpenSnackbar({open: true, variant: 'success', message: 'Success add employee'})
+                setDeleteDialog(false);
+                await fetchEmployee();
+            }
         }
         catch (e) {
             setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
