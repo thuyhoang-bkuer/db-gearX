@@ -10,6 +10,8 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import HomeIcon from '@material-ui/icons/Home';
 
+import { NavLink } from 'react-router-dom';
+
 import {
   Fingerprint, 
   People, 
@@ -27,13 +29,14 @@ import {
   Texture
 } from '@material-ui/icons'
 
+
 const categories = [
   {
     id: 'Transaction',
     children: [
       { id: 'Employee', icon: <Fingerprint/>},
       { id: 'Customer', icon: <People /> },
-      { id: 'Order', icon: <ShoppingCart/> },
+      { id: 'Orders', icon: <ShoppingCart/> },
       { id: 'Bill', icon: <CreditCard/> },
       { id: 'Item', icon: <Details /> },
       { id: 'Product', icon: <DevicesOther /> },
@@ -129,21 +132,22 @@ const Navigator = (props) => {
               </ListItemText>
             </ListItem>
             {children.map(({ id: childId, icon }) => (
-              <ListItem
-                key={childId}
-                button
-                className={clsx(classes.item, (childId === activeItem) && classes.itemActiveItem)}
-                onClick={() => itemHandler(childId)}
-              >
-                <ListItemIcon className={classes.itemIcon}>{icon}</ListItemIcon>
-                <ListItemText
-                  classes={{
-                    primary: classes.itemPrimary,
-                  }}
+              <NavLink key={childId} style={{textDecoration: 'none', color: 'inherit'}} exact to={childId.toLocaleLowerCase()}>
+                <ListItem
+                  button
+                  className={clsx(classes.item, (childId === activeItem) && classes.itemActiveItem)}
+                  onClick={() => itemHandler(childId)}
                 >
-                  {childId}
-                </ListItemText>
-              </ListItem>
+                  <ListItemIcon className={classes.itemIcon}>{icon}</ListItemIcon>
+                    <ListItemText
+                      classes={{
+                        primary: classes.itemPrimary,
+                      }}
+                    >
+                      {childId}
+                    </ListItemText>
+                </ListItem>
+              </NavLink> 
             ))}
 
             <Divider className={classes.divider} />

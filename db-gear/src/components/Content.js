@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 
-import { Employee, Product, Orders } from './Items';
-
+import { Employee, Product, Orders, Customer } from './Items';
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
 const styles = theme => ({
   paper: {
@@ -18,14 +18,25 @@ const styles = theme => ({
 function Content(props) {
   const { classes, activeItem } = props;
 
+
+
   return (
-    <Paper className={classes.paper}>
-<<<<<<< HEAD
-      <Orders />
-=======
-      <Product />
->>>>>>> origin/Dang
-    </Paper>
+    
+      <Paper className={classes.paper}>
+        <Route path='/employee'>
+          <Employee/>
+        </Route>
+        <Route path='/customer'>
+          <Customer/>
+        </Route>
+        <Route path='/product'>
+          <Product/>
+        </Route>
+        <Route path='/orders'>
+          <Orders/>
+        </Route>
+      </Paper>
+
   );
 }
 

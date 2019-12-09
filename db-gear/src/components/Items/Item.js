@@ -225,6 +225,9 @@ function Item({ init, classes }) {
         
     }
 
+    useEffect(() => {
+        fetchItems();
+    }, [init]);
 
     useEffect(() => {
         console.log(items);

@@ -13,7 +13,7 @@ import {
     Drawer
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/styles';
-import { Edit, Delete, Save, Cancel, Search, Refresh } from '@material-ui/icons';
+import { Edit, Delete, Save, Cancel, Search, Refresh, Assessment } from '@material-ui/icons';
 import { withFormik } from 'formik';
 import _ from 'lodash';
 
@@ -25,6 +25,7 @@ import FormGenerator from './Form/FormGenerator';
 import DynamicSnackbar from './Snackbar/DynamicSnackbar';
 import SearchBar from './SearchBar/SearchBar';
 import Item from './Item';
+import ReportDialog from './Dialogs/ReportDialog';
 
 
 
@@ -48,18 +49,6 @@ const orderInsert = [
     {key: "cid", name: "CustomerID", type: String},
     {key: "essn", name: "Employee SSN", type: String}
 ]
-
-const itemCols = [
-    {key: "order_id", name: "Order ID", frozen: true, type: String, lock: true},
-    {key: "status", name: "Product ID", type: ['Confirming', 'Processing', 'Transfering', 'Done', 'Cancel']},
-    {key: "name", name: "Display Name", type: ['COD', 'CREDIT', 'OnlBanking'], lock: true},
-    {key: "price", name: "Price", type: Number},
-    {key: "quantity", name: "Quantity", type: String},
-    {key: "prod_id", name: "Discription", type: String},
-    {key: "producer", name: "Producer", type: String, lock: true},
-    {key: "cost", name: "Cost", type: String, lock: true},
-    {key: "description", name: "Discription", type: String}
-].map(col => ({...col, ...defaultColumnConfig}));
 
 const fields = orderCols.map(({key, name}) => ({id: key, text: name}));
 
@@ -137,6 +126,7 @@ function Orders(props) {
     const [items, setItems]               = React.useState([]);
     const [values, setValues]             = React.useState({});
     const [query, setQuery]               = React.useState('');
+    const [report, setReport]             = React.useState({});
     const [updateDrawer, setUpdateDrawer] = React.useState(false);
     const [insertDrawer, setInsertDrawer] = React.useState(false);
     const [deleteDialog, setDeleteDialog] = React.useState(false);
@@ -225,7 +215,7 @@ function Orders(props) {
         try {
             console.log('will added')
 
-            const response = await API.post(values.prod_id ? `item/` : `orders`, values);
+            const response = await API.post(`orders`, values);
             if (response.data.code === "EREQUEST") {
                 const message = response.data.originalError.info.message.split('.');
                 setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
@@ -244,6 +234,25 @@ function Orders(props) {
         
     }
 
+    const handleGenerateReport = async (event) => {
+        try {
+            const response = await API.get(`orders/summary/${values.order_id}`);
+            if (response.data.code === "EREQUEST") {
+                const message = response.data.originalError.info.message.split('.');
+                setOpenSnackbar({open: true, variant: 'error', message: response.data.originalError.info.message})
+                setInsertDialog(false);
+            }
+            else {
+                setOpenSnackbar({open: true, variant: 'success', message: 'Report generated'})
+                setReport(response.data[0][0]);
+            }
+        }
+        catch (e) {
+            setOpenSnackbar({open: true, variant: 'error', message: 'An error occurs'})
+            setInsertDialog(false);
+        }
+        
+    }
 
     useEffect(() => {
         console.log(orders);
@@ -333,6 +342,30 @@ function Orders(props) {
                 </Grid>
                 </Toolbar>
             </AppBar>
+            <ReportDialog 
+                open={_.size(report) !== 0}
+                handleClose={() => setReport({})}
+                handleOk={() => {
+                    setReport({});
+                    setOpenSnackbar({ open: true, variant: 'success', message: 'Download report successful'})
+                }}
+                fields={[
+                    {key: 'order_id', name: 'OrderID'},
+                    {key: 'status', name: 'Status'},
+                    {key: 'payment_type', name: 'Payment Type'},
+                    {key: 'essn', name: 'Employee SSN'},
+                    {key: 'first_name', name: "Employee's Firstname"},
+                    {key: 'last_name', name: "Employee's Lastname"},
+                    {key: 'cid', name: 'Customer ID'},
+                    {key: 'name', name: "Customer's Name"},
+                    {key: 'address', name: "Address"},
+                    {key: 'no_items', name: 'Number of items'},
+                    {key: 'raw_price', name: 'Raw price'},
+                    {key: 'discount', name: 'Discount'},
+                    {key: 'real_price', name: 'Final price'},
+                ]}
+                data={report}
+            />
             <DynamicSnackbar
                 handleClose={() => setOpenSnackbar({...openSnackbar, open: false})}
                 {...openSnackbar}
@@ -496,6 +529,16 @@ function Orders(props) {
                                 onClick={() => setDeleteDialog(true)}
                             >
                                 Delete
+                            </Button>
+                        </Grid>
+                        <Grid item xs={2}>
+                            <Button 
+                                className={classes.addOrder} 
+                                variant="contained"
+                                startIcon={<Assessment/>}
+                                onClick={handleGenerateReport}
+                            >
+                                Report
                             </Button>
                         </Grid>
                     </Grid>

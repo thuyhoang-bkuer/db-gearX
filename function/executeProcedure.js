@@ -16,7 +16,6 @@ const executeProcedure = async (res, procedure, params) => {
           res.send(err);
       } else {
           const { recordsets } = result
-          console.log(recordsets)
           res.send(recordsets);
       }
       sqlPool.close();

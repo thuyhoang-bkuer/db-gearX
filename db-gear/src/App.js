@@ -2,12 +2,13 @@ import React from 'react';
 
 import './App.css';
 import Paperbase from './components/Paperbase';
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="App">
+    <Router>
       <Paperbase />
-    </div>
+    </Router>
   );
 }
 

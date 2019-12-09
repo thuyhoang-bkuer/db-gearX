@@ -165,7 +165,7 @@ const styles = {
 function Paperbase(props) {
   const { classes } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [activeItem, setActiveItem] = React.useState('Employee')
+  const [activeItem, setActiveItem] = React.useState('')
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
